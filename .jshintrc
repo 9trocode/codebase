@@ -1,0 +1,13 @@
+{
+  "esnext": true,
+  "node": true,
+  "immed": true,
+  "newcap": true,
+  "nonew": true,
+  "plusplus": true,
+  "quotmark": true,
+  "unused": true,
+  "strict": true,
+  "varstmt": true,
+  "browser": false
+}

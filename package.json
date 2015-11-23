@@ -1,0 +1,31 @@
+{
+  "name": "codebase",
+  "version": "0.0.0",
+  "description": "Node.js Codebase CLI/API wrapper",
+  "bin": "src/cli.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "jscs --esnext index.js src"
+  },
+  "keywords": [
+    "cli",
+    "codebase",
+    "api",
+    "codebase-api",
+    "codebase-cli"
+  ],
+  "author": "Alessandro Artoni <artoale@gmail.com>",
+  "license": "MIT",
+  "repository": "artoale/codebase",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "denodeify": "^1.2.1",
+    "got": "^5.1.0",
+    "inquirer": "^0.11.0",
+    "osenv": "^0.1.3",
+    "yargs": "^3.30.0"
+  }
+}
