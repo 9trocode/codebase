@@ -6,8 +6,7 @@ const denodeify = require('denodeify'),
   homeDir = osenv.home(),
   authFile = path.join(homeDir, '.codebase_credentials'),
   readFile = denodeify(require('fs').readFile),
-  writeFile = denodeify(require('fs').writeFile),
-  chmodSync = denodeify(require('fs').chmodSync);
+  writeFile = denodeify(require('fs').writeFile);
 
 let getCredentials = () => {
   return readFile(authFile).then((data) => {
@@ -38,8 +37,7 @@ let getCredentialsOrPrompt = (prompt) => {
       message: 'Type your Codebase API key'
     }])
     .then((answers) => {
-      return writeFile(authFile, JSON.stringify(answers, null, ' '))
-        .then(chmodSync(authFile, 0o600))
+      return writeFile(authFile, JSON.stringify(answers, null, ' '), {mode: 0o600})
         .then(() =>  answers);
     });
   });
