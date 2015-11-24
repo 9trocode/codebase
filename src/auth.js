@@ -37,7 +37,7 @@ let getCredentialsOrPrompt = (prompt) => {
       message: 'Type your Codebase API key'
     }])
     .then((answers) => {
-      return writeFile(authFile, JSON.stringify(answers, null, ' '))
+      return writeFile(authFile, JSON.stringify(answers, null, ' '), {mode: 0o600})
         .then(() =>  answers);
     });
   });
