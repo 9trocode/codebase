@@ -1,5 +1,5 @@
 'use strict';
 
 module.exports = {
-  api: require('./src/codebase')
+  login: require('./src/codebase')
 };
