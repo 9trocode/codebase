@@ -12,9 +12,14 @@ module.exports = (config) => {
   let get = (slug) => {
     return got(endpoint + slug, {
       auth: `${user}:${pass}`,
-      json: true
+      // Sometime codebase returns 40x errors with HTML inside. We only set
+      // header, but want to propagete those error, prior to any parse issue
+      json: false,
+      headers: {
+        'Accept': 'application/json'
+      }
     }).then((resp) => {
-      return resp.body;
+      return JSON.parse(resp.body);
     });
   };
 
