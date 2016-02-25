@@ -1,6 +1,6 @@
 {
   "name": "codebase",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Node.js Codebase CLI/API wrapper",
   "bin": "src/cli.js",
   "main": "index.js",
