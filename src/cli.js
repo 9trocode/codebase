@@ -15,31 +15,39 @@ const denodeify = require('denodeify'),
       inquirer.prompt(questions, resolve);
     });
   },
-
-  argv = require('yargs')
-  .usage('Usage: $0 [options]')
+  trim = string => string.replace(/\s+/g, ' '),
+  yargs = require('yargs'),
+  argv = yargs
+  .usage('Usage: $0 <command> [options]')
   .example('$0 --project api --ticket 123')
-  .options('p', {
-    alias: 'project',
-    demand: false,
-    describe: `Codebase project identifier.
-If not specified it defaults to what's inside $PWD/.codebase-project`,
-    type: 'string'
+  .command('show-ticket', 'Show ticket details', yargs => {
+    return yargs.options('p', {
+      alias: 'project',
+      demand: false,
+      describe: trim(`Codebase project identifier.
+      If not specified it defaults to what's inside $PWD/.codebase-project`),
+      type: 'string'
+    })
+    .options('t', {
+      alias: 'ticket',
+      demand: false,
+      describe: trim(`Codebase ticket identifier.
+      If not specified it tries to guess it based on your current branch name`),
+      type: 'string'
+    })
+    .options('c', {
+      alias: 'count',
+      demand: false,
+      default: '-1',
+      describe: `Number of ticket updates to retrieve, -1 for no limits`,
+      type: 'string'
+    })
+    .usage('Usage: $0 show-ticket [options]')
+    .help('h')
+    .alias('h', 'help');
+
   })
-  .options('t', {
-    alias: 'ticket',
-    demand: false,
-    describe: `Codebase ticket identifier.
-If not specified it tries to guess it based on your current branch name`,
-    type: 'string'
-  })
-  .options('c', {
-    alias: 'count',
-    demand: false,
-    default: '-1',
-    describe: `Number of ticket updates to retrieve, -1 for no limits`,
-    type: 'string'
-  })
+  .command('list-projects', 'List all projects in your organization')
   .options('no-colors', {
     demand: false,
     describe: `Prevents output colour`,
@@ -47,6 +55,7 @@ If not specified it tries to guess it based on your current branch name`,
   })
   .help('h')
   .alias('h', 'help')
+  .epilogue('For more information on each command run $0 <command> --help')
   .argv;
 
 
@@ -80,6 +89,7 @@ let getProject = () => {
       });
   });
 };
+
 
 
 /**
@@ -130,22 +140,53 @@ let project, ticket, config = {};
 // Run in sequence since otherwise inquirer breaks :(
 // This *could* be refactored to have a separate prompt-only promise on which
 // inquirer additionaly wait on, but it would significantly increase complexity.
-getCredential().then((conf) => {
-  config = conf;
-  return getProject();
-}).then((pj) => {
-  project = pj;
-  return getTicket();
-}).then((tk) => {
-  ticket = tk;
-}).then(() => {
-  let api = codebase(config);
-  return api.ticketDetails(project, ticket);
-}).then((ticket) => format.ticket(ticket, argv.c))
-.catch((err) => {
-  if (err.statusCode && err.statusCode === 404) {
-    console.warn(`It appears that ticket ${ticket} doesn't exists for project "${project}" (got a 404)`);
-  } else {
-    console.error(`There has been an error: ${JSON.stringify(err)}`);
+
+let commands = {
+  'show-ticket': function () {
+    showTicket();
+  },
+  'list-projects': function () {
+    listProjects();
   }
-});
+};
+
+
+
+let showTicket = () => {
+  getCredential().then((conf) => {
+    config = conf;
+    return getProject();
+  }).then((pj) => {
+    project = pj;
+    return getTicket();
+  }).then((tk) => {
+    ticket = tk;
+  }).then(() => {
+    let api = codebase(config);
+    return api.ticketDetails(project, ticket);
+  }).then((ticket) => format.ticket(ticket, argv.c))
+  .catch((err) => {
+    if (err.statusCode && err.statusCode === 404) {
+      console.warn(`It appears that ticket ${ticket} doesn't exists for project "${project}" (got a 404)`);
+    } else {
+      console.error(`There has been an error: ${JSON.stringify(err)}`);
+    }
+  });
+};
+
+let listProjects = () => {
+  getCredential()
+    .then(codebase)
+    .then(api => api.listProjects())
+    .then(projects => format.projects(projects))
+    .catch(console.error);
+}
+
+let command = argv._[0] || 'show-ticket';
+if (typeof commands[command] !== 'function') {
+  console.error(`Command ${command} doesn't exist :(
+  `);
+  yargs.showHelp();
+} else {
+  commands[command]();
+}

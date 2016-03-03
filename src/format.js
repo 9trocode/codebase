@@ -1,6 +1,7 @@
 'use strict';
 
 const chalk = require('chalk'),
+  Table = require('cli-table'),
 
   windowWidth = process.stdout.columns || 80,
 
@@ -67,8 +68,36 @@ const chalk = require('chalk'),
       console.log(noteSeparator);
       printed += 1;
     });
+
+  },
+
+  formatProjects = projects => {
+    // instantiate
+    var table = new Table({
+      head: [
+        'Project Id',
+        'Project Name',
+        'Permalink',
+        'Open tickets',
+        'Closed tickets'
+      ]
+    });
+
+    // table is an Array, so you can `push`, `unshift`, `splice` and friends
+
+    projects.forEach(project => {
+      table.push([
+        project.project_id,
+        project.name,
+        project.permalink,
+        project.open_tickets,
+        project.closed_tickets
+      ]);
+    });
+    console.log(table.toString());
   };
 
 module.exports = {
-  ticket: formatTicket
+  ticket: formatTicket,
+  projects: formatProjects
 };

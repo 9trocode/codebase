@@ -38,8 +38,16 @@ module.exports = (config) => {
     });
   };
 
+  let listProjects = () => {
+    return get('/projects')
+      .then(projects => projects.map(data => data.project))
+      .then(projects => projects.filter(project =>
+        project.status === 'active'));
+  }
+
   return {
     ticketDetails: details,
-    listTickets: listTickets
+    listTickets: listTickets,
+    listProjects: listProjects
   };
 };
