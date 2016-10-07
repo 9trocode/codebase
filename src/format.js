@@ -73,7 +73,7 @@ const chalk = require('chalk'),
 
   formatProjects = projects => {
     // instantiate
-    var table = new Table({
+    let table = new Table({
       head: [
         'Project Id',
         'Project Name',

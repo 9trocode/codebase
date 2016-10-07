@@ -23,6 +23,23 @@ module.exports = (config) => {
     });
   };
 
+  let post = (slug, data) => {
+    return got(endpoint + slug, {
+      auth: `${user}:${pass}`,
+      // Sometime codebase returns 40x errors with HTML inside. We only set
+      // header, but want to propagete those error, prior to any parse issue
+      json: false,
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    }).then((resp) => {
+      return JSON.parse(resp.body);
+    });
+  };
+
   let listTickets = (project) => {
     get(`/${project}/tickets`).then(console.log);
   };
@@ -43,9 +60,16 @@ module.exports = (config) => {
       .then(projects => projects.map(data => data.project))
       .then(projects => projects.filter(project =>
         project.status === 'active'));
-  }
+  };
+
+  let addNote = (project, ticket, note) => {
+    return post(`/${project}/tickets/${ticket}/notes`, {
+      ticket_note: note
+    });
+  };
 
   return {
+    addNote: addNote,
     ticketDetails: details,
     listTickets: listTickets,
     listProjects: listProjects

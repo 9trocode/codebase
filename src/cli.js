@@ -7,6 +7,7 @@ const denodeify = require('denodeify'),
   auth = require('./auth'),
   codebase = require('./codebase'),
   format = require('./format'),
+  stringTemplate = require('string-template'),
   readFile = denodeify(fs.readFile),
   exec = denodeify(require('child_process').exec),
 
@@ -46,6 +47,25 @@ const denodeify = require('denodeify'),
     .help('h')
     .alias('h', 'help');
 
+  })
+  .command('add-note', 'Add a note to a ticket', yargs => {
+    return yargs.usage('Usage $0 add-note "Your note"')
+    .options('p', {
+      alias: 'project',
+      demand: false,
+      describe: trim(`Codebase project identifier.
+      If not specified it defaults to what's inside $PWD/.codebase-project`),
+      type: 'string'
+    })
+    .options('t', {
+      alias: 'ticket',
+      demand: false,
+      describe: trim(`Codebase ticket identifier.
+      If not specified it tries to guess it based on your current branch name`),
+      type: 'string'
+    })
+    .help('h')
+    .alias('h', 'help');
   })
   .command('list-projects', 'List all projects in your organization')
   .options('no-colors', {
@@ -147,10 +167,40 @@ let commands = {
   },
   'list-projects': function () {
     listProjects();
+  },
+  'add-note': function (args) {
+    addNote(args[1]);
   }
 };
 
 
+let addNote = (content) => {
+  getCredential().then((conf) => {
+    config = conf;
+    return getProject();
+  }).then((pj) => {
+    project = pj;
+    return getTicket();
+  }).then((tk) => {
+    ticket = tk;
+  }).then(() => {
+    let api = codebase(config);
+    content = stringTemplate(content, {
+      ticket: ticket,
+      project: project
+    });
+    return api.addNote(project, ticket, {
+      content
+    });
+  }).then((note) => console.log(note))
+  .catch((err) => {
+    if (err.statusCode && err.statusCode === 404) {
+      console.warn(`It appears that ticket ${ticket} doesn't exists for project "${project}" (got a 404)`);
+    } else {
+      console.error(`There has been an error: ${JSON.stringify(err)}`);
+    }
+  });
+};
 
 let showTicket = () => {
   getCredential().then((conf) => {
@@ -180,7 +230,7 @@ let listProjects = () => {
     .then(api => api.listProjects())
     .then(projects => format.projects(projects))
     .catch(console.error);
-}
+};
 
 let command = argv._[0] || 'show-ticket';
 if (typeof commands[command] !== 'function') {
@@ -188,5 +238,5 @@ if (typeof commands[command] !== 'function') {
   `);
   yargs.showHelp();
 } else {
-  commands[command]();
+  commands[command](argv._);
 }
